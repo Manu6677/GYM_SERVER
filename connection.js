@@ -33,7 +33,7 @@ const client = mysql.createConnection({
     user: db_user,
     password: db_pass,
     database: db,
-    // port: db_port
+    port: db_port
 });
 
 // Connect to the database

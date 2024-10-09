@@ -40,12 +40,28 @@ exports.addUser = async (req, res) => {
     client.query(query, values, (err, result) => {
       if (err) {
         console.error(err);
-        return res.status(500).json({ message: "Database error" });
+        return res
+                .status(500)
+                .json({ 
+                        success : false,
+                        message: err?.message 
+                      });
       }
-      return res.status(201).json({ message: "User created successfully", userId: result.insertId });
+      return res
+              .status(201)
+              .json({ 
+                      message: "User created successfully", 
+                      userId: result.insertId,
+                      success : true
+                    });
     });
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "Server error" });
+    return res
+            .status(500)
+            .json({ 
+                    message: error?.message,
+                    success:false
+                  });
   }
 };

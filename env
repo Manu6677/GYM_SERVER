@@ -1,0 +1,8 @@
+DB_HOST=host
+DB_USER=user
+DB_PORT=3306
+PORT=8000
+DB_PASS=pswd
+DB=gym
+
+
