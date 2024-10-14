@@ -5,35 +5,29 @@ const client = require("../connection");
 
 
 // Function to add a user
-exports.addUser = async (req, res) => {
+exports.addPlan = async (req, res) => {
 
   console.log('req in controller', req);
 
   try {
-    const { first_name, last_name, email, phone_number, address, status, password, profile_image_base64, role } = req.body;
+    const { plan_name, duration_in_months, price, description, status} = req.body;
 
-    if (!first_name || !email || !phone_number || !password) {
+    if (!plan_name || !duration_in_months || !price ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
-
     // Insert query
     const query = `
-      INSERT INTO users (first_name, last_name, email, phone_number, address, status, password, profile_image_base64, role)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO plans (plan_name, duration_in_months, price, description, status)
+      VALUES (?, ?, ?, ?, ?)
     `;
 
     const values = [
-      first_name,
-      last_name || null, 
-      email,
-      phone_number,
-      address || null, 
-      status || "active",                   //active|inactive|suspended
-      hashedPassword, 
-      profile_image_base64 || null,
-      role || "member"                      //member|admin|trainer
+      plan_name,
+      duration_in_months,
+      price,
+      description || null,
+      status || "active"      //active|inactive
     ];
 
     // Execute the query
@@ -50,8 +44,8 @@ exports.addUser = async (req, res) => {
       return res
               .status(201)
               .json({ 
-                      message: "User created successfully", 
-                      userId: result.insertId,
+                      message: "Plan created successfully", 
+                      planId: result.insertId,
                       success : true
                     });
     });
@@ -69,26 +63,26 @@ exports.addUser = async (req, res) => {
 
 
 // Function to get a user
-exports.getUser = async (req, res) => {
+exports.getPlan = async (req, res) => {
 
   console.log('req in controller', req);
 
   try {
-    const { user_id } = req.body;
+    const { plan_id } = req.body;
     var condition = "";
 
-    if (user_id ) {
-      condition = 'where user_id = ?'
+    if (plan_id ) {
+      condition = 'where plan_id = ?'
     }
 
 
     // Insert query
     const query = `
-      SELECT * FROM users ${condition} ORDER BY user_id
+      SELECT * FROM plans ${condition} ORDER BY plan_id
     `;
 
     const values = [
-      user_id||null                     
+      plan_id|null                     
     ];
 
     // Execute the query
@@ -105,7 +99,7 @@ exports.getUser = async (req, res) => {
       return res
               .status(201)
               .json({ 
-                      message: "User fetched successfully", 
+                      message: "plans fetched successfully", 
                       data: result,
                       success : true
                     });
@@ -124,21 +118,21 @@ exports.getUser = async (req, res) => {
 
 
 // Function to remove a user
-exports.deleteUser = async (req, res) => {
+exports.deletePlan = async (req, res) => {
 
   try {
-    const { user_id } = req.body;
+    const { plan_id } = req.body;
 
-    if (!user_id ) {
+    if (!plan_id ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
     const query = `
-      DELETE FROM users WHERE user_id = ?
+      DELETE FROM plans WHERE plan_id = ?
     `;
 
     const values = [
-      user_id                   
+      plan_id                   
     ];
 
     // Execute the query
@@ -155,7 +149,7 @@ exports.deleteUser = async (req, res) => {
       return res
               .status(201)
               .json({ 
-                      message: "User removed successfully", 
+                      message: "Plan removed successfully", 
                       data: result,
                       success : true
                     });
@@ -174,11 +168,11 @@ exports.deleteUser = async (req, res) => {
 
 
 // Function to update a user
-exports.updateUser = async (req, res) => {
+exports.updatePlan = async (req, res) => {
   try {
-    const { user_id, first_name, last_name, email, phone_number, address, status, profile_image_base64, role } = req.body;
+    const { plan_id, plan_name, duration_in_months, price, description, status } = req.body;
 
-    if (!user_id) {
+    if (!plan_id) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -186,51 +180,38 @@ exports.updateUser = async (req, res) => {
     const updates = [];
     const values = [];
 
-    if (first_name) {
-      updates.push("first_name = ?");
-      values.push(first_name);
+    if (plan_name) {
+      updates.push("plan_name = ?");
+      values.push(plan_name);
     }
-    if (last_name) {
-      updates.push("last_name = ?");
-      values.push(last_name);
+    if (duration_in_months) {
+      updates.push("duration_in_months = ?");
+      values.push(duration_in_months);
     }
-    if (email) {
-      updates.push("email = ?");
-      values.push(email);
+    if (price) {
+      updates.push("price = ?");
+      values.push(price);
     }
-    if (phone_number) {
-      updates.push("phone_number = ?");
-      values.push(phone_number);
-    }
-    if (address) {
-      updates.push("address = ?");
-      values.push(address);
+    if (description) {
+      updates.push("description = ?");
+      values.push(description);
     }
     if (status) {
       updates.push("status = ?");
       values.push(status);
     }
-    if (profile_image_base64) {
-      updates.push("profile_image_base64 = ?");
-      values.push(profile_image_base64);
-    }
-    if (role) {
-      updates.push("role = ?");
-      values.push(role);
-    }
-
     if (updates.length === 0) {
       return res.status(400).json({ message: "No fields to update" });
     }
 
     // Construct the query
     const query = `
-      UPDATE users 
+      UPDATE plans 
       SET ${updates.join(", ")} 
-      WHERE user_id = ?
+      WHERE plan_id = ?
     `;
     
-    values.push(user_id); // Add user_id to the values array
+    values.push(plan_id); // Add user_id to the values array
 
      // Execute the query
      client.query(query, values, (err, result) => {
@@ -246,7 +227,7 @@ exports.updateUser = async (req, res) => {
       return res
               .status(201)
               .json({ 
-                      message: "User updated successfully", 
+                      message: "Plan updated successfully", 
                       data: result,
                       success : true
                     });
