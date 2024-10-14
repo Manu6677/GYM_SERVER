@@ -3,28 +3,27 @@ const mysql = require("mysql2"); // Use mysql2 for async/await support
 const client = require("../connection");
 
 
-// Function to add a plan
-exports.addPlan = async (req, res) => {
+// Function to add a subscription
+exports.addSubscription = async (req, res) => {
 
   try {
-    const { plan_name, duration_in_months, price, description, status} = req.body;
+    const { user_id, plan_id, subscription_from, subscription_to } = req.body;
 
-    if (!plan_name || !duration_in_months || !price ) {
+    if (!user_id || !plan_id || !subscription_from || !subscription_to) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
     // Insert query
     const query = `
-      INSERT INTO plans (plan_name, duration_in_months, price, description, status)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO subscriptions (user_id, plan_id, subscription_from, subscription_to)
+      VALUES (?, ?, ?, ?)
     `;
 
     const values = [
-      plan_name,
-      duration_in_months,
-      price,
-      description || null,
-      status || "active"      //active|inactive
+      user_id, 
+      plan_id, 
+      subscription_from, 
+      subscription_to                 
     ];
 
     // Execute the query
@@ -41,8 +40,8 @@ exports.addPlan = async (req, res) => {
       return res
               .status(201)
               .json({ 
-                      message: "Plan created successfully", 
-                      planId: result.insertId,
+                      message: "Subscription created successfully", 
+                      userId: result.insertId,
                       success : true
                     });
     });
@@ -59,25 +58,25 @@ exports.addPlan = async (req, res) => {
 
 
 
-// Function to get a plan
-exports.getPlan = async (req, res) => {
+// Function to get a user
+exports.getSubscription = async (req, res) => {
 
   try {
-    const { plan_id } = req.body;
+    const { id } = req.body;
     var condition = "";
 
-    if (plan_id ) {
-      condition = 'where plan_id = ?'
+    if (id ) {
+      condition = 'where id = ?'
     }
 
 
     // Insert query
     const query = `
-      SELECT * FROM plans ${condition} ORDER BY plan_id
+      SELECT * FROM subscriptions ${condition} ORDER BY id
     `;
 
     const values = [
-      plan_id|null                     
+      id||null                     
     ];
 
     // Execute the query
@@ -94,7 +93,7 @@ exports.getPlan = async (req, res) => {
       return res
               .status(201)
               .json({ 
-                      message: "plans fetched successfully", 
+                      message: "subscriptions fetched successfully", 
                       data: result,
                       success : true
                     });
@@ -112,22 +111,22 @@ exports.getPlan = async (req, res) => {
 
 
 
-// Function to remove a plan
-exports.deletePlan = async (req, res) => {
+// Function to remove a user
+exports.deleteSubscription = async (req, res) => {
 
   try {
-    const { plan_id } = req.body;
+    const { id } = req.body;
 
-    if (!plan_id ) {
+    if (!id ) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
     const query = `
-      DELETE FROM plans WHERE plan_id = ?
+      DELETE FROM subscriptions WHERE id = ?
     `;
 
     const values = [
-      plan_id                   
+      id                   
     ];
 
     // Execute the query
@@ -144,7 +143,7 @@ exports.deletePlan = async (req, res) => {
       return res
               .status(201)
               .json({ 
-                      message: "Plan removed successfully", 
+                      message: "subscriptions removed successfully", 
                       data: result,
                       success : true
                     });
@@ -162,12 +161,12 @@ exports.deletePlan = async (req, res) => {
 
 
 
-// Function to update a plan
-exports.updatePlan = async (req, res) => {
+// Function to update a user
+exports.updateSubscription = async (req, res) => {
   try {
-    const { plan_id, plan_name, duration_in_months, price, description, status } = req.body;
+    const { id, user_id, plan_id, subscription_from, subscription_to  } = req.body;
 
-    if (!plan_id) {
+    if (!id) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
@@ -175,38 +174,35 @@ exports.updatePlan = async (req, res) => {
     const updates = [];
     const values = [];
 
-    if (plan_name) {
-      updates.push("plan_name = ?");
-      values.push(plan_name);
+    if (user_id) {
+      updates.push("user_id = ?");
+      values.push(user_id);
     }
-    if (duration_in_months) {
-      updates.push("duration_in_months = ?");
-      values.push(duration_in_months);
+    if (plan_id) {
+      updates.push("plan_id = ?");
+      values.push(plan_id);
     }
-    if (price) {
-      updates.push("price = ?");
-      values.push(price);
+    if (subscription_from) {
+      updates.push("subscription_from = ?");
+      values.push(subscription_from);
     }
-    if (description) {
-      updates.push("description = ?");
-      values.push(description);
+    if (subscription_to) {
+      updates.push("subscription_to = ?");
+      values.push(subscription_to);
     }
-    if (status) {
-      updates.push("status = ?");
-      values.push(status);
-    }
+    
     if (updates.length === 0) {
       return res.status(400).json({ message: "No fields to update" });
     }
 
     // Construct the query
     const query = `
-      UPDATE plans 
+      UPDATE subscriptions 
       SET ${updates.join(", ")} 
-      WHERE plan_id = ?
+      WHERE id = ?
     `;
     
-    values.push(plan_id); // Add user_id to the values array
+    values.push(id); // Add user_id to the values array
 
      // Execute the query
      client.query(query, values, (err, result) => {
@@ -222,7 +218,7 @@ exports.updatePlan = async (req, res) => {
       return res
               .status(201)
               .json({ 
-                      message: "Plan updated successfully", 
+                      message: "subscriptions updated successfully", 
                       data: result,
                       success : true
                     });
