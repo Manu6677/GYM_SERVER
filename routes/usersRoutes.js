@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { addUser } = require("../controllers/user");
+const { addUser, getUser, deleteUser } = require("../controllers/user");
 
 // ********************************************************************************************************
 //                                     User routes
@@ -9,5 +9,7 @@ const { addUser } = require("../controllers/user");
 
 // Post User in DataBase
 router.post("/adduser", addUser);
+router.post("/getUser", getUser);
+router.post("/deleteUser", deleteUser);
 
 module.exports = router;
