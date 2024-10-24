@@ -1,17 +1,16 @@
 const express = require('express');
 const router = express.Router();
 
-const { addUser, getUser, deleteUser, updateUser, deleteUserForcefully } = require("../controllers/user");
+const { addSubscription, getSubscription, deleteSubscription, updateSubscription } = require("../controllers/subscription");
 
 // ********************************************************************************************************
 //                                     User routes
 // ********************************************************************************************************
 
 // Post User in DataBase
-router.post("/adduser", addUser);
-router.post("/getUser", getUser);
-router.post("/deleteUser", deleteUser);
-router.post("/updateUser", updateUser);
-router.post("/deleteUserForcefully", deleteUserForcefully);
+router.post("/addSubscription", addSubscription);
+router.post("/getSubscription", getSubscription);
+router.post("/deleteSubscription", deleteSubscription);
+router.post("/updateSubscription", updateSubscription);
 
 module.exports = router;

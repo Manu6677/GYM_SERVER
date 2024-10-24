@@ -9,6 +9,8 @@ const bodyParser = require("body-parser"); // Import body-parser
 
 // Ensure you have the correct path to your routes
 const usersRoute = require("./routes/usersRoutes"); // Fix the path to your usersRoutes
+const plansRoute = require("./routes/plansRoutes"); // Fix the path to your plansRoutes
+const subscriptionRoute = require("./routes/subscriptionRoutes"); // Fix the path to your plansRoutes
 
 app.use(cors());
 app.use(bodyParser.json({ limit: "10mb" }));
@@ -34,6 +36,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 const port = process.env.PORT || 3001;
 
 app.use("/api/v1/users", usersRoute); 
+app.use("/api/v1/plans", plansRoute); 
+app.use("/api/v1/subscriptions", subscriptionRoute); 
 
 
 app.listen(port, () => {
