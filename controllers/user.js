@@ -2,6 +2,7 @@ const express = require("express");
 const mysql = require("mysql2"); // Use mysql2 for async/await support
 const bcrypt = require("bcrypt"); // For password hashing
 const client = require("../connection");
+const {pagination} = require("../utils");
 
 
 // Function to add a user
@@ -74,22 +75,38 @@ exports.getUser = async (req, res) => {
   console.log('req in controller', req);
 
   try {
-    const { user_id } = req.body;
+    const { user_id, include_deleted, page, limit } = req.body;
     var condition = "";
+    // var pagination_query = ""
 
-    if (user_id ) {
-      condition = 'where user_id = ?'
+    if (user_id && include_deleted) {
+      condition = 'where user_id = ? '
+    }
+    else if(user_id){
+      condition = 'where user_id = ? and is_deleted = 0'
+    }
+    else if(include_deleted){
+      condition = "";
+    }
+    else{
+      condition = "where is_deleted = 0";
     }
 
 
+
+
     // Insert query
-    const query = `
+    var query = `
       SELECT * FROM users ${condition} ORDER BY user_id
     `;
 
     const values = [
       user_id||null                     
     ];
+
+    if(limit){
+      query = pagination(query,limit,page);      
+    }
 
     // Execute the query
     client.query(query, values, (err, result) => {
@@ -122,54 +139,6 @@ exports.getUser = async (req, res) => {
 };
 
 
-
-// Function to remove a user
-exports.deleteUser = async (req, res) => {
-
-  try {
-    const { user_id } = req.body;
-
-    if (!user_id ) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    const query = `
-      DELETE FROM users WHERE user_id = ?
-    `;
-
-    const values = [
-      user_id                   
-    ];
-
-    // Execute the query
-    client.query(query, values, (err, result) => {
-      if (err) {
-        console.error(err);
-        return res
-                .status(500)
-                .json({ 
-                        success : false,
-                        message: err?.message 
-                      });
-      }
-      return res
-              .status(201)
-              .json({ 
-                      message: "User removed successfully", 
-                      data: result,
-                      success : true
-                    });
-    });
-  } catch (error) {
-    console.error(error);
-    return res
-            .status(500)
-            .json({ 
-                    message: error?.message,
-                    success:false
-                  });
-  }
-};
 
 
 
@@ -247,6 +216,105 @@ exports.updateUser = async (req, res) => {
               .status(201)
               .json({ 
                       message: "User updated successfully", 
+                      data: result,
+                      success : true
+                    });
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+            .status(500)
+            .json({ 
+                    message: error?.message,
+                    success:false
+                  });
+  }
+};
+
+
+// Function to remove a user forcefully or perminatly
+exports.deleteUser = async (req, res) => {
+
+  try {
+    const { user_id } = req.body;
+
+    if (!user_id ) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const query = `
+      update users set is_deleted = 1 WHERE user_id = ?
+    `;
+
+    const values = [
+      user_id                   
+    ];
+
+    // Execute the query
+    client.query(query, values, (err, result) => {
+      if (err) {
+        console.error(err);
+        return res
+                .status(500)
+                .json({ 
+                        success : false,
+                        message: err?.message 
+                      });
+      }
+      return res
+              .status(201)
+              .json({ 
+                      message: "User removed successfully", 
+                      data: result,
+                      success : true
+                    });
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+            .status(500)
+            .json({ 
+                    message: error?.message,
+                    success:false
+                  });
+  }
+};
+
+
+
+// Function to remove a user forcefully or perminatly
+exports.deleteUserForcefully = async (req, res) => {
+
+  try {
+    const { user_id } = req.body;
+
+    if (!user_id ) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const query = `
+      DELETE FROM users WHERE user_id = ?
+    `;
+
+    const values = [
+      user_id                   
+    ];
+
+    // Execute the query
+    client.query(query, values, (err, result) => {
+      if (err) {
+        console.error(err);
+        return res
+                .status(500)
+                .json({ 
+                        success : false,
+                        message: err?.message 
+                      });
+      }
+      return res
+              .status(201)
+              .json({ 
+                      message: "User removed successfully", 
                       data: result,
                       success : true
                     });

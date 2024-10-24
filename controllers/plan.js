@@ -1,6 +1,7 @@
 const express = require("express");
 const mysql = require("mysql2"); // Use mysql2 for async/await support
 const client = require("../connection");
+const {pagination} = require("../utils");
 
 
 // Function to add a plan
@@ -63,22 +64,35 @@ exports.addPlan = async (req, res) => {
 exports.getPlan = async (req, res) => {
 
   try {
-    const { plan_id } = req.body;
+    const { plan_id, include_deleted, page, limit } = req.body;
     var condition = "";
 
-    if (plan_id ) {
-      condition = 'where plan_id = ?'
+    if (plan_id && include_deleted) {
+      condition = 'where plan_id = ? '
+    }
+    else if(plan_id){
+      condition = 'where plan_id = ? and is_deleted = 0'
+    }
+    else if(include_deleted){
+      condition = "";
+    }
+    else{
+      condition = "where is_deleted = 0";
     }
 
 
     // Insert query
-    const query = `
+    var query = `
       SELECT * FROM plans ${condition} ORDER BY plan_id
     `;
 
     const values = [
       plan_id|null                     
     ];
+
+    if(limit){
+      query = pagination(query,limit,page);      
+    }
 
     // Execute the query
     client.query(query, values, (err, result) => {
@@ -95,56 +109,6 @@ exports.getPlan = async (req, res) => {
               .status(201)
               .json({ 
                       message: "plans fetched successfully", 
-                      data: result,
-                      success : true
-                    });
-    });
-  } catch (error) {
-    console.error(error);
-    return res
-            .status(500)
-            .json({ 
-                    message: error?.message,
-                    success:false
-                  });
-  }
-};
-
-
-
-// Function to remove a plan
-exports.deletePlan = async (req, res) => {
-
-  try {
-    const { plan_id } = req.body;
-
-    if (!plan_id ) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
-
-    const query = `
-      DELETE FROM plans WHERE plan_id = ?
-    `;
-
-    const values = [
-      plan_id                   
-    ];
-
-    // Execute the query
-    client.query(query, values, (err, result) => {
-      if (err) {
-        console.error(err);
-        return res
-                .status(500)
-                .json({ 
-                        success : false,
-                        message: err?.message 
-                      });
-      }
-      return res
-              .status(201)
-              .json({ 
-                      message: "Plan removed successfully", 
                       data: result,
                       success : true
                     });
@@ -206,7 +170,7 @@ exports.updatePlan = async (req, res) => {
       WHERE plan_id = ?
     `;
     
-    values.push(plan_id); // Add user_id to the values array
+    values.push(plan_id); // Add plan_id to the values array
 
      // Execute the query
      client.query(query, values, (err, result) => {
@@ -223,6 +187,104 @@ exports.updatePlan = async (req, res) => {
               .status(201)
               .json({ 
                       message: "Plan updated successfully", 
+                      data: result,
+                      success : true
+                    });
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+            .status(500)
+            .json({ 
+                    message: error?.message,
+                    success:false
+                  });
+  }
+};
+
+
+
+// Function to remove a plan
+exports.deletePlan = async (req, res) => {
+
+  try {
+    const { plan_id } = req.body;
+
+    if (!plan_id ) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const query = `
+      update plans set is_deleted = 1 WHERE plan_id = ?
+    `;
+
+    const values = [
+      plan_id                   
+    ];
+
+    // Execute the query
+    client.query(query, values, (err, result) => {
+      if (err) {
+        console.error(err);
+        return res
+                .status(500)
+                .json({ 
+                        success : false,
+                        message: err?.message 
+                      });
+      }
+      return res
+              .status(201)
+              .json({ 
+                      message: "Plan removed successfully", 
+                      data: result,
+                      success : true
+                    });
+    });
+  } catch (error) {
+    console.error(error);
+    return res
+            .status(500)
+            .json({ 
+                    message: error?.message,
+                    success:false
+                  });
+  }
+};
+
+// Function to remove a plan
+exports.deletePlanForcefully = async (req, res) => {
+
+  try {
+    const { plan_id } = req.body;
+
+    if (!plan_id ) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    const query = `
+      DELETE FROM plans WHERE plan_id = ?
+    `;
+
+    const values = [
+      plan_id                   
+    ];
+
+    // Execute the query
+    client.query(query, values, (err, result) => {
+      if (err) {
+        console.error(err);
+        return res
+                .status(500)
+                .json({ 
+                        success : false,
+                        message: err?.message 
+                      });
+      }
+      return res
+              .status(201)
+              .json({ 
+                      message: "Plan removed successfully", 
                       data: result,
                       success : true
                     });
